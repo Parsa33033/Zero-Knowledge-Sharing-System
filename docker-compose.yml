@@ -10,14 +10,11 @@ services:
       - 3306
     entrypoint:
       sh -c "
-        echo 'CREATE DATABASE IF NOT EXISTS documentation;' > /docker-entrypoint-initdb.d/init.sql;
+        echo 'CREATE DATABASE IF NOT EXISTS bookstack;CREATE DATABASE IF NOT EXISTS owncloud;' > /docker-entrypoint-initdb.d/init.sql;
         /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
       "
     environment:
-      MYSQL_DATABASE: "app"   
-      MYSQL_USERNAME: "admin"
-      MYSQL_PASSWORD: qazx4rf6resdewedWEDXRTrdxdrtgfxRTFD
-      MYSQL_ROOT_PASSWORD: qazx4rf6resdewedWEDXRTrdxdrtgfxRTFD
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - type: volume
         source: mysql_db
@@ -35,9 +32,9 @@ services:
     restart: always
     environment:
       DB_HOST: mysql:3306 
-      DB_DATABASE: "documentation" 
+      DB_DATABASE: "bookstack" 
       DB_USERNAME: root
-      DB_PASSWORD: qazx4rf6resdewedWEDXRTrdxdrtgfxRTFD
+      DB_PASSWORD: ${MYSQL_PASSWORD}
     networks:
       - app-network
     depends_on:
@@ -102,13 +99,14 @@ services:
       OWNCLOUD_DB_TYPE: mysql
       OWNCLOUD_DB_NAME: owncloud
       OWNCLOUD_DB_USERNAME: root
-      OWNCLOUD_DB_PASSWORD: qazx4rf6resdewedWEDXRTrdxdrtgfxRTFD
+      OWNCLOUD_DB_PASSWORD: ${MYSQL_PASSWORD}
       OWNCLOUD_DB_HOST: mysql
       OWNCLOUD_ADMIN_USERNAME: admin
-      OWNCLOUD_ADMIN_PASSWORD: admin
+      OWNCLOUD_ADMIN_PASSWORD: ${OWNCLOUD_ADMIN_PASS}
       OWNCLOUD_MYSQL_UTF8MB4: "true"
     networks:
       - app-network
+    restart: always
   cryptpad:
     image: arno0x0x/docker-cryptpad
     container_name: cryptpad
