@@ -1,0 +1,132 @@
+version: "3.6"
+services:
+  mysql:
+    # main mysql database
+    image: mysql:5
+    container_name: mysql
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    entrypoint:
+      sh -c "
+        echo 'CREATE DATABASE IF NOT EXISTS documentation;' > /docker-entrypoint-initdb.d/init.sql;
+        /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      "
+    environment:
+      MYSQL_DATABASE: "app"   
+      MYSQL_USERNAME: "admin"
+      MYSQL_PASSWORD: qazx4rf6resdewedWEDXRTrdxdrtgfxRTFD
+      MYSQL_ROOT_PASSWORD: qazx4rf6resdewedWEDXRTrdxdrtgfxRTFD
+    volumes:
+      - type: volume
+        source: mysql_db
+        target: /var/lib/mysql
+    networks:
+      - app-network
+  bookstack: 
+    # documentation with bookstack
+    image: solidnerd/bookstack:0.27.5
+    container_name: bookstack
+    ports:
+      - 8999:80
+    expose:
+      - 8999
+    restart: always
+    environment:
+      DB_HOST: mysql:3306 
+      DB_DATABASE: "documentation" 
+      DB_USERNAME: root
+      DB_PASSWORD: qazx4rf6resdewedWEDXRTrdxdrtgfxRTFD
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+#  webserver:
+#    image: nginx:alpine
+#    container_name: webserver
+#    restart: unless-stopped
+#    tty: true
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#    networks:
+#      - app-network
+#  etherpad:
+#    image: etherpad/etherpad
+#    container_name: etherpad
+#    ports:
+#      - 9001:9001
+#      - 9000:9000
+#    expose:
+#      - 9001
+#      - 9000
+#    environment:
+#      DB_TYPE: "mysql"
+#      DB_HOST: mysql
+#      DB_PORT: 3306
+#      DB_NAME: etherpad_db
+#      DB_USER: root
+#      DB_PASS: qazx4rf6resdewedWEDXRTrdxdrtgfxRTFD
+#      ADMIN_PASSWORD: admin
+#      USER_PASSWORD: user
+#      SHOW_SETTINGS_IN_ADMIN_PAGE: "true"
+#      REQUIRE_AUTHENTICATION: "true"
+##      DB_CHARSET: "utf8mb4"
+#      ETHERPAD_PLUGINS: "ep_codepad ep_author_neat ep_hide_referrer"
+#    links:
+#      - mysql
+#    depends_on:
+#      - mysql
+#    networks:
+#      - app-network
+  owncloud: 
+    image: owncloud
+    container_name: owncloud
+    ports:
+      - 8080:80
+      - 8443:443
+    expose:
+      - 8080
+      - 8443
+    links:
+      - mysql
+    depends_on:
+      - mysql
+    volumes:
+      - type: volume
+        source: owncloud_vol
+        target: /var/www/html/
+    environment:
+      OWNCLOUD_DOMAIN: localhost
+      OWNCLOUD_DB_TYPE: mysql
+      OWNCLOUD_DB_NAME: owncloud
+      OWNCLOUD_DB_USERNAME: root
+      OWNCLOUD_DB_PASSWORD: qazx4rf6resdewedWEDXRTrdxdrtgfxRTFD
+      OWNCLOUD_DB_HOST: mysql
+      OWNCLOUD_ADMIN_USERNAME: admin
+      OWNCLOUD_ADMIN_PASSWORD: admin
+      OWNCLOUD_MYSQL_UTF8MB4: "true"
+    networks:
+      - app-network
+  cryptpad:
+    image: arno0x0x/docker-cryptpad
+    container_name: cryptpad
+    ports:
+      - 3000:3000
+      - 3001:3001
+    expose:
+      - 3000
+      - 3001
+    volumes:
+      - type: volume
+        source: cryptpad_vol
+        target: /cryptpad
+volumes:
+  mysql_db:
+  etherpad_vol:
+  cryptpad_vol:
+  owncloud_vol:
+networks:
+  app-network:
+    driver: bridge
